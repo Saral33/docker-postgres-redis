@@ -1,0 +1,56 @@
+version: '3'
+services:
+  node-app:
+    image: node:latest
+    working_dir: /usr/src/app
+    command: npm start
+    links:
+      - redis
+
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/usr/src/app
+    networks:
+      - dbNetwork
+
+    depends_on:
+      - redis
+      - db
+
+  redis:
+    image: 'redis:alpine'
+    container_name: cache
+    ports:
+      - 6379
+    restart: always
+    networks:
+      - dbNetwork
+
+  db:
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    networks:
+      - dbNetwork
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - dbNetwork
+
+volumes:
+  redis:
+    driver: local
+
+networks:
+  dbNetwork:
