@@ -1,41 +1,33 @@
-import axios from 'axios';
 const dotenv = require('dotenv');
 dotenv.config();
-const path = require('path');
-import express from 'express';
-import { RedisClientType, createClient } from 'redis';
 
-// const redis = require('redis');
+import express, { NextFunction, Request, Response } from 'express';
 
+import userRoute from './routes/userRoute';
+import todoRoute from './routes/todoRoute';
+import errorHandlerMiddleware from './error/errorMiddleware';
+
+require('./redis');
 require('./db');
 const app = express();
 app.use(express.json());
-let client: RedisClientType;
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
 
-(async () => {
-  client = createClient({
-    socket: {
-      port: 6379,
-      host: 'redis',
-    },
+app.use('/users', userRoute);
+app.use('/todos', todoRoute);
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
+  res.status(err.statusCode).json({
+    status: err.status,
+    error: err,
+    message: err.message,
+    stack: err.stack,
   });
-  client.on('error', (error: Error) => console.error(`Error : ${error}`));
-  client.on('connect', () => console.log('Redis connected'));
-  await client.connect();
-})();
-
-app.get('/:id', async (req: express.Request, res: express.Response) => {
-  console.log(process.env.POSTGRES_USER);
-  const test = await client.get(req.params.id);
-  if (test) {
-    res.send(`<h1>${JSON.parse(test).title}</h1>`);
-  } else {
-    const response = await axios.get(
-      'https://jsonplaceholder.typicode.com/posts/' + req.params.id
-    );
-    await client.set(req.params.id, JSON.stringify(response.data));
-    res.send(`<h1>${response.data.title}</h1>`);
-  }
 });
 const port = 3000;
 app.listen(port, () => {

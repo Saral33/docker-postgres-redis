@@ -14,3 +14,5 @@ client
   .catch((err: any) => {
     console.error('Error connecting to the database:', err);
   });
+
+export default client;
