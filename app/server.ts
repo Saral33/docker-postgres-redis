@@ -5,7 +5,6 @@ import express, { NextFunction, Request, Response } from 'express';
 
 import userRoute from './routes/userRoute';
 import todoRoute from './routes/todoRoute';
-import errorHandlerMiddleware from './error/errorMiddleware';
 
 require('./redis');
 require('./db');
